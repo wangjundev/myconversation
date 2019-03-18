@@ -1,0 +1,13 @@
+<component name="libraryTable">
+  <library name="Gradle: __local_aars__:/Users/wjmbp/.gradle/caches/transforms-1/files-1.1/onsdk_all.aar/c4b02d9217f14f5a9a25006ffd01b06c:unspecified@jar">
+    <CLASSES>
+      <root url="file://$USER_HOME$/.gradle/caches/transforms-1/files-1.1/onsdk_all.aar/c4b02d9217f14f5a9a25006ffd01b06c/res" />
+      <root url="jar://$USER_HOME$/.gradle/caches/transforms-1/files-1.1/onsdk_all.aar/c4b02d9217f14f5a9a25006ffd01b06c/jars/libs/navi-sdk-bundle.jar!/" />
+      <root url="jar://$USER_HOME$/.gradle/caches/transforms-1/files-1.1/onsdk_all.aar/c4b02d9217f14f5a9a25006ffd01b06c/jars/classes.jar!/" />
+      <root url="jar://$USER_HOME$/.gradle/caches/transforms-1/files-1.1/onsdk_all.aar/c4b02d9217f14f5a9a25006ffd01b06c/jars/libs/nirvana-network-annotation-0.2.0.jar!/" />
+      <root url="jar://$USER_HOME$/.gradle/caches/transforms-1/files-1.1/onsdk_all.aar/c4b02d9217f14f5a9a25006ffd01b06c/jars/libs/BaiduNaviSDK_1.0.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>

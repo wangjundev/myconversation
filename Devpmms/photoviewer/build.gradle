@@ -1,0 +1,34 @@
+buildscript {
+    repositories {
+        mavenCentral()
+    }
+    dependencies {
+        classpath 'com.android.tools.build:gradle:1.1.1'
+    }
+}
+
+apply plugin: 'com.android.library'
+
+
+android {
+    compileSdkVersion 27
+    buildToolsVersion "28.0.3"
+    sourceSets.main {
+        manifest.srcFile 'AndroidManifest.xml'
+        java.srcDirs = ['src', 'appcompat/src']
+        res.srcDirs = ['res', 'appcompat/res']
+    }
+}
+
+dependencies {
+    compile findDependency(':support-v4', 'com.android.support:support-v4:23.3.+')
+    compile findDependency(':support-appcompat-v7', 'com.android.support:appcompat-v7:23.3.+')
+}
+
+Dependency findDependency(String projectName, String moduleName) {
+    if (findProject(projectName) != null) {
+        return dependencies.project(path: projectName)
+    }
+
+    return dependencies.create(moduleName)
+}

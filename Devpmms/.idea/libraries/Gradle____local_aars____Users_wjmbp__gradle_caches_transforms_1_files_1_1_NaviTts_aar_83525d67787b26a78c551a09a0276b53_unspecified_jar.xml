@@ -1,0 +1,11 @@
+<component name="libraryTable">
+  <library name="Gradle: __local_aars__:/Users/wjmbp/.gradle/caches/transforms-1/files-1.1/NaviTts.aar/83525d67787b26a78c551a09a0276b53:unspecified@jar">
+    <CLASSES>
+      <root url="jar://$USER_HOME$/.gradle/caches/transforms-1/files-1.1/NaviTts.aar/83525d67787b26a78c551a09a0276b53/jars/classes.jar!/" />
+      <root url="jar://$USER_HOME$/.gradle/caches/transforms-1/files-1.1/NaviTts.aar/83525d67787b26a78c551a09a0276b53/jars/libs/com.baidu.tts_2.3.0.3201.jar!/" />
+      <root url="file://$USER_HOME$/.gradle/caches/transforms-1/files-1.1/NaviTts.aar/83525d67787b26a78c551a09a0276b53/res" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>

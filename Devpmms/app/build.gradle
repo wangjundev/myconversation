@@ -1,0 +1,64 @@
+apply plugin: 'com.android.application'
+android {
+    compileSdkVersion 27
+    buildToolsVersion "28.0.3"
+
+    defaultConfig {
+        applicationId "com.android.messaging"
+        minSdkVersion 23
+        targetSdkVersion 27
+
+        ndk {
+            moduleName "libgiftranscode"
+        }
+
+        testApplicationId "com.android.messaging.test"
+        testInstrumentationRunner "android.test.InstrumentationTestRunner"
+        javaCompileOptions.annotationProcessorOptions.includeCompileClasspath = true
+        multiDexEnabled true
+    }
+    sourceSets {
+        main {
+            jni.srcDirs = []
+            assets.srcDirs = ['src/main/assets', 'src/main/assets/2']
+        }
+    }
+
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.txt'
+        }
+    }
+}
+
+dependencies {
+    implementation 'com.android.support:support-v13:27.1.1'
+    implementation 'com.android.support:support-annotations:27.1.1'
+    implementation 'com.android.support:appcompat-v7:27.1.1'
+    implementation 'com.android.support:palette-v7:27.1.1'
+    implementation 'com.android.support:recyclerview-v7:27.1.1'
+    implementation project(':chips')
+    implementation project(':photoviewer')
+    implementation files('/Users/wjmbp/Downloads/90jar/libphonenumber.jar')
+    implementation files('/Users/wjmbp/Downloads/90jar/guava.jar')
+    implementation files('/Users/wjmbp/Downloads/90jar/android-common.jar')
+    implementation files('/Users/wjmbp/Downloads/90jar/com.android.vcard.jar')
+    implementation files('/Users/wjmbp/Downloads/90jar/android-common-framesequence.jar')
+    implementation files('libs/BaiduLBS_Android.jar')
+    implementation files('libs/IndoorscapeAlbumPlugin.jar')
+    implementation fileTree(includes: ['*.aar'], dir: 'libs')
+    implementation 'com.android.support:support-compat:27.1.1'
+    implementation files('libs/vivounionsdk_v4.2.4.0.jar')
+    implementation files('libs/volley.jar')
+    implementation 'com.alibaba:fastjson:1.1.70.android'
+    String HMSSDKVer = '2.6.3.301'
+    implementation 'com.huawei.android.hms:hwid:' + HMSSDKVer
+    // 登陆
+    implementation 'com.huawei.android.hms:iap:' + HMSSDKVer
+    // 支付
+    implementation files('libs/SDK_TY_4.6.11.jar')
+    implementation files('libs/alipaySdk-20180601.jar')
+    implementation 'com.tencent.mm.opensdk:wechat-sdk-android-with-mta:+'
+}
