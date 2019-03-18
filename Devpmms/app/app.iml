@@ -125,29 +125,29 @@
     <orderEntry type="library" name="Gradle: android.arch.lifecycle:viewmodel-1.1.0" level="project" />
     <orderEntry type="library" name="Gradle: com.huawei.android.hms:iap-2.6.3.301" level="project" />
     <orderEntry type="library" name="Gradle: com.android.support:palette-v7-27.1.1" level="project" />
-    <orderEntry type="library" name="Gradle: __local_aars__:/Users/wjmbp/Downloads/90jar/android-common-framesequence.jar:unspecified@jar" level="project" />
     <orderEntry type="library" name="Gradle: __local_aars__:/Users/wjmbp/Downloads/Devpmms/app/libs/IndoorscapeAlbumPlugin.jar:unspecified@jar" level="project" />
     <orderEntry type="library" name="Gradle: com.android.support:recyclerview-v7-27.1.1" level="project" />
-    <orderEntry type="library" name="Gradle: __local_aars__:/Users/wjmbp/Downloads/90jar/guava.jar:unspecified@jar" level="project" />
     <orderEntry type="library" name="Gradle: com.android.support:support-vector-drawable-27.1.1" level="project" />
     <orderEntry type="library" name="Gradle: com.android.support:support-media-compat-27.1.1" level="project" />
     <orderEntry type="library" name="Gradle: com.android.support:support-core-ui-27.1.1" level="project" />
-    <orderEntry type="library" name="Gradle: __local_aars__:/Users/wjmbp/Downloads/90jar/com.android.vcard.jar:unspecified@jar" level="project" />
     <orderEntry type="library" name="Gradle: __local_aars__:/Users/wjmbp/Downloads/Devpmms/app/libs/alipaySdk-20180601.jar:unspecified@jar" level="project" />
     <orderEntry type="library" name="Gradle: com.android.support:support-core-utils-27.1.1" level="project" />
     <orderEntry type="library" name="Gradle: com.tencent.mm.opensdk:wechat-sdk-android-with-mta:5.3.1@jar" level="project" />
+    <orderEntry type="library" name="Gradle: __local_aars__:/Users/wjmbp/Downloads/Devpmms/app/libs/com.android.vcard.jar:unspecified@jar" level="project" />
     <orderEntry type="library" name="Gradle: __local_aars__:/Users/wjmbp/Downloads/Devpmms/app/libs/volley.jar:unspecified@jar" level="project" />
+    <orderEntry type="library" name="Gradle: __local_aars__:/Users/wjmbp/Downloads/Devpmms/app/libs/guava.jar:unspecified@jar" level="project" />
     <orderEntry type="library" name="Gradle: com.android.support:support-fragment-27.1.1" level="project" />
-    <orderEntry type="library" name="Gradle: __local_aars__:/Users/wjmbp/Downloads/90jar/android-common.jar:unspecified@jar" level="project" />
     <orderEntry type="library" name="Gradle: __local_aars__:/Users/wjmbp/Downloads/Devpmms/app/libs/vivounionsdk_v4.2.4.0.jar:unspecified@jar" level="project" />
     <orderEntry type="library" name="Gradle: android.arch.core:runtime-1.1.0" level="project" />
     <orderEntry type="library" name="Gradle: com.alibaba:fastjson:1.1.70.android@jar" level="project" />
     <orderEntry type="library" name="Gradle: __local_aars__:/Users/wjmbp/.gradle/caches/transforms-1/files-1.1/onsdk_all.aar/c4b02d9217f14f5a9a25006ffd01b06c:unspecified@jar" level="project" />
-    <orderEntry type="library" name="Gradle: __local_aars__:/Users/wjmbp/Downloads/90jar/libphonenumber.jar:unspecified@jar" level="project" />
     <orderEntry type="library" name="Gradle: com.android.support:appcompat-v7-27.1.1" level="project" />
+    <orderEntry type="library" name="Gradle: __local_aars__:/Users/wjmbp/Downloads/Devpmms/app/libs/android-common.jar:unspecified@jar" level="project" />
     <orderEntry type="library" name="Gradle: android.arch.lifecycle:livedata-core-1.1.0" level="project" />
     <orderEntry type="library" name="Gradle: android.arch.core:common:1.1.0@jar" level="project" />
+    <orderEntry type="library" name="Gradle: __local_aars__:/Users/wjmbp/Downloads/Devpmms/app/libs/libphonenumber.jar:unspecified@jar" level="project" />
     <orderEntry type="library" name="Gradle: com.huawei.android.hms:base-2.6.3.301" level="project" />
+    <orderEntry type="library" name="Gradle: __local_aars__:/Users/wjmbp/Downloads/Devpmms/app/libs/android-common-framesequence.jar:unspecified@jar" level="project" />
     <orderEntry type="library" name="Gradle: com.android.support:support-v13-27.1.1" level="project" />
     <orderEntry type="library" name="Gradle: android.arch.lifecycle:runtime-1.1.0" level="project" />
     <orderEntry type="module" module-name="chips" />
