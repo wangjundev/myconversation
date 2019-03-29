@@ -3,8 +3,9 @@ package com.android.messaging.ui.appsettings;
 import android.content.ContentValues;
 import android.content.DialogInterface;
 import android.database.Cursor;
-import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Message;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.CursorAdapter;
@@ -13,6 +14,10 @@ import android.widget.SimpleCursorAdapter;
 import android.widget.Toast;
 
 import com.android.messaging.R;
+import com.android.messaging.datamodel.DataModel;
+import com.android.messaging.datamodel.DatabaseHelper;
+import com.android.messaging.datamodel.DatabaseWrapper;
+import com.android.messaging.datamodel.MessagingContentProvider;
 import com.android.messaging.ui.BugleActionBarActivity;
 import com.android.messaging.ui.UIIntents;
 
@@ -27,8 +32,10 @@ public class H5WhiteListSettingsActivity extends BugleActionBarActivity {
     private SimpleCursorAdapter mAdapter;
     private Cursor mCursor;
 
-    private H5WLDatabaseHelper mdb_helper;
-    private SQLiteDatabase mdb;
+//    private H5WLDatabaseHelper mdb_helper;
+//    private SQLiteDatabase mdb;
+    private DatabaseWrapper mdbWrapper;
+    private Handler mHandler;
 
 
     private List<String> contentList = new ArrayList<String>();
@@ -58,14 +65,40 @@ public class H5WhiteListSettingsActivity extends BugleActionBarActivity {
         });
         //adapter = new H5CNAdapter(this, 0, contentList);
         //myListView.setAdapter(adapter);
+        mHandler = new Handler(){
+            @Override
+            public void handleMessage(Message msg) {
+                super.handleMessage(msg);
+                mAdapter = new SimpleCursorAdapter(getApplicationContext(), R.layout.h5wl_listview_item, mCursor,
+                        new String[]{"codenumber"}, new int[]{R.id.text_view}, CursorAdapter.FLAG_REGISTER_CONTENT_OBSERVER);
+                myListView.setAdapter(mAdapter);
+            }
+        };
 
-        mdb_helper = new H5WLDatabaseHelper(this, "h5wldb", null, 1);
-        mdb = mdb_helper.getWritableDatabase();
-        mCursor = mdb.query(H5WLDatabaseHelper.H5WL_TABLENAME, null, null, null, null, null, null);
-        mAdapter = new SimpleCursorAdapter(this, R.layout.h5wl_listview_item, mCursor,
-                new String[]{"codenumber"}, new int[]{R.id.text_view}, CursorAdapter.FLAG_REGISTER_CONTENT_OBSERVER);
-        myListView.setAdapter(mAdapter);
+//        mdb_helper = new H5WLDatabaseHelper(this, "h5wldb", null, 1);
+//        mdb = mdb_helper.getWritableDatabase();
+//        mCursor = mdb.query(H5WLDatabaseHelper.H5WL_TABLENAME, null, null, null, null, null, null);
+        new Thread(new Runnable(){
+            @Override
+            public void run() {
+                mdbWrapper = DataModel.get().getDatabase();
+                mCursor = mdbWrapper.query(DatabaseHelper.H5WHITELIST_TABLE, null, null, null, null, null, null);
+                Message msg = new Message();
+                msg.arg1 = 1;
+                mHandler.sendMessage(msg);
+            }
+        }).start();
+//                mAdapter = new SimpleCursorAdapter(getApplicationContext(), R.layout.h5wl_listview_item, mCursor,
+//                        new String[]{"codenumber"}, new int[]{R.id.text_view}, CursorAdapter.FLAG_REGISTER_CONTENT_OBSERVER);
+//                myListView.setAdapter(mAdapter);
+//        mdbWrapper = DataModel.get().getDatabase();
+//        mdbWrapper.query(H5WLDatabaseHelper.H5WL_TABLENAME, null, null, null, null, null, null);
+//        mAdapter = new SimpleCursorAdapter(this, R.layout.h5wl_listview_item, mCursor,
+//                new String[]{"codenumber"}, new int[]{R.id.text_view}, CursorAdapter.FLAG_REGISTER_CONTENT_OBSERVER);
+//        myListView.setAdapter(mAdapter);
     }
+
+
 
     /*@Override
     public void onContentChanged() {
@@ -73,10 +106,28 @@ public class H5WhiteListSettingsActivity extends BugleActionBarActivity {
         mAdapter.changeCursor(mCursor);
     }*/
 
+//    @Override
+//    protected void onResume() {
+//        super.onResume();
+//
+//        new Thread(new Runnable() {
+//            @Override
+//            public void run() {
+//                mdbWrapper = DataModel.get().getDatabase();
+//                mCursor = mdbWrapper.query(DatabaseHelper.H5WHITELIST_TABLE, null, null, null, null, null, null);
+//                Message msg = new Message();
+//                msg.arg1 = 1;
+//                mHandler.sendMessage(msg);
+//            }
+//        }).start();
+//    }
+
     private void refreshListView(){
-        mCursor = mdb.query(H5WLDatabaseHelper.H5WL_TABLENAME, null, null,
-                null, null, null, null);
+//        mCursor = mdb.query(H5WLDatabaseHelper.H5WL_TABLENAME, null, null,
+//                null, null, null, null);
+        mCursor = mdbWrapper.query(DatabaseHelper.H5WHITELIST_TABLE, null, null, null, null, null, null);
         mAdapter.changeCursor(mCursor);
+        MessagingContentProvider.notifyConversationListChanged();
     }
 
     @Override
@@ -96,6 +147,7 @@ public class H5WhiteListSettingsActivity extends BugleActionBarActivity {
                 return true;
             case android.R.id.home:
                 onBackPressed();
+                //MessagingContentProvider.notifyConversationListChanged();
                 return true;
             default:
                break;
@@ -105,8 +157,18 @@ public class H5WhiteListSettingsActivity extends BugleActionBarActivity {
 
     private void addItem(String addNumber){
         ContentValues cv = new ContentValues();
-        cv.put("codenumber", addNumber);
-        mdb.insert(H5WLDatabaseHelper.H5WL_TABLENAME, null, cv);
+        String tempNumber = addNumber.replaceAll(" ", "");
+
+        if(tempNumber.length() <= 6 || tempNumber.startsWith("106") || tempNumber.startsWith("+86") ){
+            cv.put(DatabaseHelper.H5CodeNumberColumns.H5_DISPLAY_CODENUMBER, tempNumber);
+        }else if(tempNumber.startsWith("86")){
+            cv.put(DatabaseHelper.H5CodeNumberColumns.H5_DISPLAY_CODENUMBER, "+"+tempNumber);
+        }else{
+            cv.put(DatabaseHelper.H5CodeNumberColumns.H5_DISPLAY_CODENUMBER, "+86"+tempNumber);
+        }
+        //cv.put("codenumber", addNumber);
+//        mdb.insert(H5WLDatabaseHelper.H5WL_TABLENAME, null, cv);
+        mdbWrapper.insert(DatabaseHelper.H5WHITELIST_TABLE, null, cv);
         refreshListView();
     }
 
@@ -114,7 +176,8 @@ public class H5WhiteListSettingsActivity extends BugleActionBarActivity {
         Cursor mCursor = mAdapter.getCursor();
         mCursor.moveToPosition(positon);
         int itemId = mCursor.getInt(mCursor.getColumnIndex("_id"));
-        mdb.delete(H5WLDatabaseHelper.H5WL_TABLENAME, "_id=?", new String[]{itemId + ""});
+//        mdb.delete(H5WLDatabaseHelper.H5WL_TABLENAME, "_id=?", new String[]{itemId + ""});
+        mdbWrapper.delete(DatabaseHelper.H5WHITELIST_TABLE, "_id=?", new String[]{itemId + ""});
         refreshListView();
     }
 
@@ -147,32 +210,15 @@ public class H5WhiteListSettingsActivity extends BugleActionBarActivity {
 
     @Override
     protected void onStop() {
-        mCursor.close();
-        mdb_helper.close();
-        mdb.close();
+//        mCursor.close();
+//        mdb_helper.close();
+//        mdb.close();
         super.onStop();
     }
 
-    /*private void initList() {
-        contentList.add("Content Item 1");
-        contentList.add("Content Item 2");
-        contentList.add("Content Item 3");
-        contentList.add("Content Item 4");
-        contentList.add("Content Item 5");
-        contentList.add("Content Item 6");
-        contentList.add("Content Item 7");
-        contentList.add("Content Item 8");
-        contentList.add("Content Item 9");
-        contentList.add("Content Item 10");
-        contentList.add("Content Item 11");
-        contentList.add("Content Item 12");
-        contentList.add("Content Item 13");
-        contentList.add("Content Item 14");
-        contentList.add("Content Item 15");
-        contentList.add("Content Item 16");
-        contentList.add("Content Item 17");
-        contentList.add("Content Item 18");
-        contentList.add("Content Item 19");
-        contentList.add("Content Item 20");
-    }*/
+    @Override
+    protected void onDestroy() {
+        mCursor.close();
+        super.onDestroy();
+    }
 }

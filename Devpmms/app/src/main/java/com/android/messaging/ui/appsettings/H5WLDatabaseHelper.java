@@ -9,7 +9,7 @@ import com.android.messaging.util.LogUtil;
 
 public class H5WLDatabaseHelper extends SQLiteOpenHelper {
     private static final String TAG = "H5WLDatabaseHelper";
-    public static final String H5WL_TABLENAME = "H5_Whitelist";
+    public static final String H5WL_TABLENAME = "H5_Whitelist1";
     private static final String CREATE_TABLE = "CREATE TABLE IF NOT EXISTS " + H5WL_TABLENAME +" ("
             + "_id INTEGER PRIMARY KEY  AUTOINCREMENT  NOT NULL ,"
             + "codenumber TEXT NOT NULL" + ")";
@@ -21,7 +21,7 @@ public class H5WLDatabaseHelper extends SQLiteOpenHelper {
     @Override
     public void onCreate(SQLiteDatabase db) {
         LogUtil.d(TAG, "create table");
-        db.execSQL(CREATE_TABLE);
+        //db.execSQL(CREATE_TABLE);
 
     }
 

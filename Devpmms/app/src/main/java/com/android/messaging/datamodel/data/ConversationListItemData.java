@@ -25,6 +25,7 @@ import com.android.messaging.datamodel.DatabaseHelper;
 import com.android.messaging.datamodel.DatabaseHelper.ConversationColumns;
 import com.android.messaging.datamodel.DatabaseHelper.MessageColumns;
 import com.android.messaging.datamodel.DatabaseHelper.ParticipantColumns;
+import com.android.messaging.datamodel.DatabaseHelper.H5CodeNumberColumns;
 import com.android.messaging.datamodel.DatabaseWrapper;
 import com.android.messaging.datamodel.action.DeleteConversationAction;
 import com.android.messaging.util.Assert;
@@ -356,6 +357,20 @@ public class ConversationListItemData {
             + '=' + DatabaseHelper.PARTICIPANTS_TABLE + '.' + DatabaseHelper.ParticipantColumns._ID
             + ") ";
 
+    //add by junwang
+    private static final String JOIN_H5WHITELIST =
+            " INNER JOIN " + DatabaseHelper.H5WHITELIST_TABLE + " ON ("
+                    //+ DatabaseHelper.PARTICIPANTS_TABLE + '.' + ParticipantColumns.CONTACT_DESTINATION
+                    + DatabaseHelper.CONVERSATIONS_TABLE +'.' + ConversationColumns.OTHER_PARTICIPANT_NORMALIZED_DESTINATION
+                    + '=' + DatabaseHelper.H5WHITELIST_TABLE + '.' + H5CodeNumberColumns.H5_DISPLAY_CODENUMBER
+                    //+ " OR " + DatabaseHelper.CONVERSATIONS_TABLE +'.' + ConversationListViewColumns.NAME
+                    //+ '=' + DatabaseHelper.H5WHITELIST_TABLE + '.' + H5CodeNumberColumns.H5_DISPLAY_CODENUMBER
+                    //+ " OR " + DatabaseHelper.PARTICIPANTS_TABLE + '.' + ParticipantColumns.DISPLAY_DESTINATION
+                    //+ '=' + DatabaseHelper.H5WHITELIST_TABLE + '.' + H5CodeNumberColumns.H5_DISPLAY_CODENUMBER
+                    //+ " OR " + DatabaseHelper.PARTICIPANTS_TABLE + '.' + ParticipantColumns.NORMALIZED_DESTINATION
+                    //+ '=' + DatabaseHelper.H5WHITELIST_TABLE + '.' + H5CodeNumberColumns.H5_DISPLAY_CODENUMBER
+                    + ") ";
+
     // View that makes latest message read flag available with rest of conversation data.
     private static final String CONVERSATION_LIST_VIEW_SQL = "CREATE VIEW " +
             CONVERSATION_LIST_VIEW + " AS SELECT "
@@ -364,12 +379,19 @@ public class ConversationListItemData {
             + DatabaseHelper.CONVERSATIONS_TABLE + '.' + ConversationColumns.SNIPPET_TEXT
             + " as " + ConversationListViewColumns.SNIPPET_TEXT + ", "
             + DatabaseHelper.CONVERSATIONS_TABLE + '.' + ConversationColumns.SUBJECT_TEXT
-            + " as " + ConversationListViewColumns.SUBJECT_TEXT + " "
+            //add by junwang start
+            //+ " as " + ConversationListViewColumns.SUBJECT_TEXT + " "
+            + " as " + ConversationListViewColumns.SUBJECT_TEXT + ", "
+            + DatabaseHelper.PARTICIPANTS_TABLE + '.' + ParticipantColumns.NORMALIZED_DESTINATION + ", "
+            + DatabaseHelper.H5WHITELIST_TABLE + '.' + H5CodeNumberColumns.H5_DISPLAY_CODENUMBER
+            //add by junwang end
             + " FROM " + DatabaseHelper.CONVERSATIONS_TABLE
             + " LEFT JOIN " + DatabaseHelper.MESSAGES_TABLE + " ON ("
             + DatabaseHelper.CONVERSATIONS_TABLE + '.' +  ConversationColumns.LATEST_MESSAGE_ID
             + '=' + DatabaseHelper.MESSAGES_TABLE + '.' + MessageColumns._ID + ") "
             + JOIN_PARTICIPANTS
+            //add by junwang
+            + JOIN_H5WHITELIST
             + "ORDER BY " + DatabaseHelper.CONVERSATIONS_TABLE + '.'
             + ConversationColumns.SORT_TIMESTAMP + " DESC";
 
@@ -506,6 +528,9 @@ public class ConversationListItemData {
                     ConversationColumns._ID + "=?",
                     new String[] { conversationId },
                     null, null, null);
+//            cursor = dbWrapper.rawQuery("select * from " + DatabaseHelper.CONVERSATIONS_TABLE +" as a left outer join H5_Whitelist as b on a.name = b.codenumber where a._id = ?", new String[] { conversationId });
+//            cursor = dbWrapper.rawQuery("SELECT x.*, y.codenumber FROM conversations x, H5_Whitelist y WHERE x.name=y.codenumber", null);
+
             Assert.inRange(cursor.getCount(), 0, 1);
             if (cursor.moveToFirst()) {
                 conversation = new ConversationListItemData();

@@ -277,14 +277,9 @@ public class ConversationFragment extends Fragment implements ConversationDataLi
 
     /*add by junwang start*/
     static String mConversationContactName;
-    //static HashSet<String> mHs = new HashSet<>();
-    /*private void initWebViewWhiteList(){
-        mHs.add("10086");
-        mHs.add("159 5812 0627");
-        mHs.add("(650) 555-1212");
-    }*/
+    static String mConversationPhoneNumber;
 
-    static boolean isContactInWebViewWhiteList(Context context){
+    public static boolean isContactInWebViewWhiteList(Context context){
         /*if(mHs.contains(mConversationContactName)){
             return true;
         }
@@ -292,10 +287,39 @@ public class ConversationFragment extends Fragment implements ConversationDataLi
         H5WLDatabaseHelper helper = new H5WLDatabaseHelper(context, "h5wldb", null, 1);
         SQLiteDatabase db = helper.getReadableDatabase();
         Cursor cursor = null;
-        if(mConversationContactName.length() == 13){
+        if(mConversationContactName != null && mConversationContactName.length() == 13 && mConversationPhoneNumber.contains("")){
             cursor = db.rawQuery("SELECT * FROM H5_Whitelist WHERE codenumber=?", new String[]{mConversationContactName.replaceAll(" ", "")});
-        }else {
+        }else if(mConversationPhoneNumber != null && mConversationPhoneNumber.length() == 14 && mConversationPhoneNumber.startsWith("+86")){
+            cursor = db.rawQuery("SELECT * FROM H5_Whitelist WHERE codenumber=?", new String[]{mConversationPhoneNumber.replaceAll(" ", "").substring(3)});
+        } else {
             cursor = db.rawQuery("SELECT * FROM H5_Whitelist WHERE codenumber=?", new String[]{mConversationContactName});
+        }
+        /*Cursor cursor = db.query(H5WLDatabaseHelper.H5WL_TABLENAME, null,
+                "codenumber=?", new String[]{mConversationContactName}, null, null, null);*/
+        if(cursor != null && cursor.getCount() > 0){
+            cursor.close();
+            db.close();
+            return true;
+        }
+        cursor.close();
+        db.close();
+        return false;
+    }
+
+    public static boolean isContactInWebViewWhiteList(Context context, String displayName, String phoneNumber){
+        if((displayName == null) && (phoneNumber == null)){
+            return false;
+        }
+
+        H5WLDatabaseHelper helper = new H5WLDatabaseHelper(context, "h5wldb", null, 1);
+        SQLiteDatabase db = helper.getReadableDatabase();
+        Cursor cursor = null;
+        if(displayName != null && displayName.length() == 13 && displayName.contains("")){
+            cursor = db.rawQuery("SELECT * FROM H5_Whitelist WHERE codenumber=?", new String[]{displayName.replaceAll(" ", "")});
+        }else if(phoneNumber != null && phoneNumber.length() == 14 && phoneNumber.startsWith("+86")){
+            cursor = db.rawQuery("SELECT * FROM H5_Whitelist WHERE codenumber=?", new String[]{phoneNumber.replaceAll(" ", "").substring(3)});
+        } else {
+            cursor = db.rawQuery("SELECT * FROM H5_Whitelist WHERE codenumber=?", new String[]{displayName});
         }
         /*Cursor cursor = db.query(H5WLDatabaseHelper.H5WL_TABLENAME, null,
                 "codenumber=?", new String[]{mConversationContactName}, null, null, null);*/
@@ -1081,6 +1105,7 @@ public class ConversationFragment extends Fragment implements ConversationDataLi
     public String getConversationName() {
         //add by junwang
         mConversationContactName = mBinding.getData().getConversationName();
+        mConversationPhoneNumber = mBinding.getData().getParticipantPhoneNumber();
         return mBinding.getData().getConversationName();
     }
 

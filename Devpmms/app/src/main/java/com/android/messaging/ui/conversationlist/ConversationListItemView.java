@@ -50,6 +50,7 @@ import com.android.messaging.ui.AudioAttachmentView;
 import com.android.messaging.ui.ContactIconView;
 import com.android.messaging.ui.SnackBar;
 import com.android.messaging.ui.SnackBarInteraction;
+import com.android.messaging.ui.conversation.ConversationFragment;
 import com.android.messaging.util.Assert;
 import com.android.messaging.util.ContentType;
 import com.android.messaging.util.ImageUtils;
@@ -140,6 +141,10 @@ public class ConversationListItemView extends FrameLayout implements OnClickList
 
     @Override
     protected void onFinishInflate() {
+        //add by junwang start
+//        if(mData.getName() == null){
+//            return;
+//        }
         mSwipeableContainer = (ViewGroup) findViewById(R.id.swipeableContainer);
         mCrossSwipeBackground = (ViewGroup) findViewById(R.id.crossSwipeBackground);
         mSwipeableContent = (ViewGroup) findViewById(R.id.swipeableContent);
@@ -176,6 +181,10 @@ public class ConversationListItemView extends FrameLayout implements OnClickList
     public void onLayoutChange(final View v, final int left, final int top, final int right,
             final int bottom, final int oldLeft, final int oldTop, final int oldRight,
             final int oldBottom) {
+        //add by junwang start
+//        if(mData.getName() == null){
+//            return;
+//        }
         if (v == mConversationNameView) {
             setConversationName();
         } else if (v == mSnippetTextView) {
@@ -363,6 +372,12 @@ public class ConversationListItemView extends FrameLayout implements OnClickList
     public void bind(final Cursor cursor, final HostInterface hostInterface) {
         // Update our UI model
         mHostInterface = hostInterface;
+//        if(cursor == null){
+//            return;
+//        }
+//        if(!ConversationFragment.isContactInWebViewWhiteList(getContext(), cursor.getString(/*ConversationListItemData.INDEX_CONVERSATION_NAME*/1), null)) {
+//            return;
+//        }
         mData.bind(cursor);
 
         resetAnimatingState();

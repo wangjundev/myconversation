@@ -38,7 +38,7 @@
         <View
             android:id="@+id/top_margin"
             android:layout_width="match_parent"
-            android:layout_height="16dp" />
+            android:layout_height="2dp" />
 
         <include layout="@layout/attachment_preview"
             android:id="@+id/attachment_draft_view"

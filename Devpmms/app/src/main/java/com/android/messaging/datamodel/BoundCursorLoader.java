@@ -17,13 +17,13 @@
 package com.android.messaging.datamodel;
 
 import android.content.Context;
-import android.content.CursorLoader;
 import android.net.Uri;
+import android.content.CursorLoader;
 
 /**
  * Extension to basic cursor loader that has an attached binding id
  */
-public class BoundCursorLoader extends CursorLoader {
+public class BoundCursorLoader extends CursorLoader/*ConversationCursorLoader*/ {
     private final String mBindingId;
 
     /**

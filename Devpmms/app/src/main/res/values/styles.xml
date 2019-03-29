@@ -305,8 +305,8 @@
     </style>
 
     <style name="ConversationMessageViewStyle">
-        <item name="android:paddingLeft">6dp</item>
-        <item name="android:paddingRight">6dp</item>
+        <item name="android:paddingLeft">0dp</item>
+        <item name="android:paddingRight">10dp</item>
     </style>
 
     <style name="SubjectViewStyle">

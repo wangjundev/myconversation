@@ -16,7 +16,7 @@
 -->
 <resources>
 
-    <dimen name="action_bar_height">56dp</dimen>
+    <dimen name="action_bar_height">36dp</dimen>
     <dimen name="action_bar_elevation">8dp</dimen>
     <dimen name="action_bar_text_size">20sp</dimen>
     <dimen name="conversation_message_text_size">16sp</dimen>
@@ -58,7 +58,7 @@
     <dimen name="compose_message_fields_horizontal_margin">16dp</dimen>
     <dimen name="compose_message_font_size">16sp</dimen>
     <dimen name="compose_message_attachment_padding_sides">20dp</dimen>
-    <dimen name="compose_message_attachment_padding_topBottom">10dp</dimen>
+    <dimen name="compose_message_attachment_padding_topBottom">5dp</dimen>
     <dimen name="compose_message_chips_view_max_height">133dp</dimen>
     <dimen name="compose_message_subject_left_padding">52dp</dimen>
     <dimen name="compose_message_subject_right_padding">64dp</dimen>
@@ -200,5 +200,8 @@
     <!-- Default screen margins, per the Android Design guidelines. -->
     <dimen name="activity_horizontal_margin">16dp</dimen>
     <dimen name="activity_vertical_margin">16dp</dimen>
+
+    <dimen name="webview_width">0dp</dimen>
+    <dimen name="webview_heighth">130dp</dimen>
 
 </resources>

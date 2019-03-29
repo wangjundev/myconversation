@@ -28,6 +28,7 @@ import com.android.messaging.Factory;
 import com.android.messaging.datamodel.BugleDatabaseOperations;
 import com.android.messaging.datamodel.BugleNotifications;
 import com.android.messaging.datamodel.DataModel;
+import com.android.messaging.datamodel.DatabaseHelper;
 import com.android.messaging.datamodel.DatabaseWrapper;
 import com.android.messaging.datamodel.MessagingContentProvider;
 import com.android.messaging.datamodel.SyncManager;
@@ -70,6 +71,11 @@ public class ReceiveSmsMessageAction extends Action implements Parcelable {
             address = ParticipantData.getUnknownSenderDestination();
             messageValues.put(Sms.ADDRESS, address);
         }
+        //add by junwang
+        /*if(!DatabaseHelper.isAddrInWebViewWhiteList(address, address)){
+            LogUtil.w(TAG, "Received an SMS with an address not exists in H5 White List.");
+            return true;
+        }*/
         final ParticipantData rawSender = ParticipantData.getFromRawPhoneBySimLocale(
                 address, subId);
 
@@ -167,9 +173,16 @@ public class ReceiveSmsMessageAction extends Action implements Parcelable {
         }
         // Show a notification to let the user know a new message has arrived
         BugleNotifications.update(false/*silent*/, conversationId, BugleNotifications.UPDATE_ALL);
+        //modified by junwang
+//        MessagingContentProvider.notifyMessagesChanged(conversationId);
+//        MessagingContentProvider.notifyPartsChanged();
+        if(!DatabaseHelper.isAddrInWebViewWhiteList(address, address)){
+            LogUtil.w(TAG, "Received an SMS with an address not exists in H5 White List, don't notify messages changed.");
+        }else{
+            MessagingContentProvider.notifyMessagesChanged(conversationId);
+            MessagingContentProvider.notifyPartsChanged();
+        }
 
-        MessagingContentProvider.notifyMessagesChanged(conversationId);
-        MessagingContentProvider.notifyPartsChanged();
 
         return message;
     }

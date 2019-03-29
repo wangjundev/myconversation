@@ -17,6 +17,7 @@ package com.android.messaging.ui.conversation;
 
 import android.app.Activity;
 import android.content.ActivityNotFoundException;
+import android.content.AsyncTaskLoader;
 import android.content.Context;
 import android.content.Intent;
 import android.content.res.Resources;
@@ -26,11 +27,14 @@ import android.graphics.Color;
 import android.graphics.Rect;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.support.annotation.Nullable;
+import android.support.v4.text.util.LinkifyCompat;
+import android.text.Layout;
 import android.text.Spanned;
 import android.text.TextUtils;
 import android.text.format.DateUtils;
@@ -62,6 +66,7 @@ import android.widget.ImageView.ScaleType;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
+import android.content.res.Resources;
 
 import com.alipay.sdk.app.H5PayCallback;
 import com.alipay.sdk.app.PayTask;
@@ -86,7 +91,6 @@ import com.android.messaging.ui.MultiAttachmentLayout.OnAttachmentClickListener;
 import com.android.messaging.ui.PersonItemView;
 import com.android.messaging.ui.UIIntents;
 import com.android.messaging.ui.VideoThumbnailView;
-import com.android.messaging.ui.xiaomipay.MiPayMainActivity;
 import com.android.messaging.util.AccessibilityUtil;
 import com.android.messaging.util.Assert;
 import com.android.messaging.util.AvatarUriUtil;
@@ -125,9 +129,9 @@ public class ConversationMessageView extends FrameLayout implements View.OnClick
         View.OnLongClickListener, OnAttachmentClickListener {
     public interface ConversationMessageViewHost {
         boolean onAttachmentClick(ConversationMessageView view, MessagePartData attachment,
-                Rect imageBounds, boolean longPress);
+                                  Rect imageBounds, boolean longPress);
         SubscriptionListEntry getSubscriptionEntryForSelfParticipant(String selfParticipantId,
-                boolean excludeDefault);
+                                                                     boolean excludeDefault);
     }
 
     private final ConversationMessageData mData;
@@ -137,12 +141,18 @@ public class ConversationMessageView extends FrameLayout implements View.OnClick
     private AsyncImageView mMessageImageView;
     private TextView mMessageTextView;
     //add by junwang start
+    private static final long MAX_INTERVAL_TIME = 3*24*3600;
     private WebView mMessageWebView;
     private boolean mHasWebLinks;
     private int mWebViewWidth;
     private MapView mMapView;
     private Button mLocationButton;
     private Button mVivoPayButton;
+    private long mIntervalTime;
+    private String mUrl;
+    private LoadUrl mLoadUrl;
+    private int mScreenWidth;
+    private int mScreenHeight;
     //add by junwang end
     private boolean mMessageTextHasLinks;
     private boolean mMessageHasYouTubeLink;
@@ -201,7 +211,7 @@ public class ConversationMessageView extends FrameLayout implements View.OnClick
 
         //add by junwang
         mMessageWebView =(WebView)findViewById(R.id.message_webview);
-        mIsContactInWhiteList = ConversationFragment.isContactInWebViewWhiteList(mMessageWebView.getContext());
+        //mIsContactInWhiteList = ConversationFragment.isContactInWebViewWhiteList(mMessageWebView.getContext());
         mMapView = (MapView)findViewById(R.id.map_view);
         mLocationButton = (Button)findViewById(R.id.location_button);
         mLocationButton.setOnClickListener(new OnClickListener() {
@@ -210,8 +220,15 @@ public class ConversationMessageView extends FrameLayout implements View.OnClick
                 mMessageWebView.getContext().startActivity(new Intent(mMessageWebView.getContext(), BaiduMapTestActivity.class));
             }
         });
+        //mLoadUrl = new LoadUrl();
+        WindowManager manager = (WindowManager) getContext()
+                .getSystemService(Context.WINDOW_SERVICE);
+        DisplayMetrics outMetrics = new DisplayMetrics();
+        manager.getDefaultDisplay().getMetrics(outMetrics);
+        mScreenWidth = outMetrics.widthPixels;
+        mScreenHeight = outMetrics.heightPixels;
         mVivoPayButton = (Button)findViewById(R.id.vivopay_button);
-        mVivoPayButton.setOnClickListener(new OnClickListener() {
+        /*mVivoPayButton.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
                 //mVivoPayButton.getContext().startActivity(new Intent(mMessageWebView.getContext(), PayActivity.class));
@@ -222,7 +239,7 @@ public class ConversationMessageView extends FrameLayout implements View.OnClick
 //                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
 //                mMessageWebView.getContext().startActivity(intent);
             }
-        });
+        });*/
 
         mStatusTextView = (TextView) findViewById(R.id.message_status);
         mTitleTextView = (TextView) findViewById(R.id.message_title);
@@ -270,7 +287,7 @@ public class ConversationMessageView extends FrameLayout implements View.OnClick
 
     @Override
     protected void onLayout(final boolean changed, final int left, final int top, final int right,
-            final int bottom) {
+                            final int bottom) {
         final boolean isRtl = AccessibilityUtil.isLayoutRtl(this);
 
         final int iconWidth = mContactIconView.getMeasuredWidth();
@@ -322,7 +339,7 @@ public class ConversationMessageView extends FrameLayout implements View.OnClick
      * @param oneOnOne Whether this is a 1:1 conversation
      */
     public void bind(final Cursor cursor,
-            final boolean oneOnOne, final String selectedMessageId) {
+                     final boolean oneOnOne, final String selectedMessageId) {
         mOneOnOne = oneOnOne;
 
         // Update our UI model
@@ -478,9 +495,9 @@ public class ConversationMessageView extends FrameLayout implements View.OnClick
                             getContext(),
                             mData.getMmsExpiry(),
                             DateUtils.FORMAT_SHOW_DATE |
-                            DateUtils.FORMAT_SHOW_TIME |
-                            DateUtils.FORMAT_NUMERIC_DATE |
-                            DateUtils.FORMAT_NO_YEAR));
+                                    DateUtils.FORMAT_SHOW_TIME |
+                                    DateUtils.FORMAT_NUMERIC_DATE |
+                                    DateUtils.FORMAT_NO_YEAR));
             mMmsInfoTextView.setText(mmsInfoText);
             mMessageTitleLayout.setVisibility(View.VISIBLE);
         } else {
@@ -529,7 +546,7 @@ public class ConversationMessageView extends FrameLayout implements View.OnClick
         if (simNameVisible) {
             final String simNameText = mData.getIsIncoming() ? getResources().getString(
                     R.string.incoming_sim_name_text, subscriptionEntry.displayName) :
-                        subscriptionEntry.displayName;
+                    subscriptionEntry.displayName;
             mSimNameView.setText(simNameText);
             mSimNameView.setTextColor(showSimIconAsIncoming ? getResources().getColor(
                     R.color.timestamp_text_incoming) : subscriptionEntry.displayColor);
@@ -649,10 +666,10 @@ public class ConversationMessageView extends FrameLayout implements View.OnClick
                 // Youtube Thumbnail image
                 final ImageRequestDescriptor imageRequest =
                         new UriImageRequestDescriptor(Uri.parse(youtubeThumbnailUrl), desiredWidth,
-                            MessagePartData.UNSPECIFIED_SIZE, true /* allowCompression */,
-                            true /* isStatic */, false /* cropToCircle */,
-                            ImageUtils.DEFAULT_CIRCLE_BACKGROUND_COLOR /* circleBackgroundColor */,
-                            ImageUtils.DEFAULT_CIRCLE_STROKE_COLOR /* circleStrokeColor */);
+                                MessagePartData.UNSPECIFIED_SIZE, true /* allowCompression */,
+                                true /* isStatic */, false /* cropToCircle */,
+                                ImageUtils.DEFAULT_CIRCLE_BACKGROUND_COLOR /* circleBackgroundColor */,
+                                ImageUtils.DEFAULT_CIRCLE_STROKE_COLOR /* circleStrokeColor */);
                 mMessageImageView.setImageResourceId(imageRequest);
                 mMessageImageView.setTag(originalYoutubeLink);
             }
@@ -675,8 +692,8 @@ public class ConversationMessageView extends FrameLayout implements View.OnClick
     }
 
     private void bindAttachmentsOfSameType(final Predicate<MessagePartData> attachmentTypeFilter,
-            final int attachmentViewLayoutRes, final AttachmentViewBinder viewBinder,
-            final Class<?> attachmentViewClass) {
+                                           final int attachmentViewLayoutRes, final AttachmentViewBinder viewBinder,
+                                           final Class<?> attachmentViewClass) {
         final LayoutInflater layoutInflater = LayoutInflater.from(getContext());
 
         // Iterate through all attachments of a particular type (video, audio, etc).
@@ -855,6 +872,16 @@ public class ConversationMessageView extends FrameLayout implements View.OnClick
         return jsonString;
     }
 
+    private boolean isNeedH5Display(){
+        if(mData != null){
+            if((mData.getStatus() == MessageData.BUGLE_STATUS_INCOMING_COMPLETE)
+                    && (System.currentTimeMillis() - mData.getReceivedTimeStamp())%MAX_INTERVAL_TIME >= 1){
+                return true;
+            }
+        }
+        return false;
+    }
+
     private boolean WXPay(WebView view, String url){
         //IWXAPI api = WXAPIFactory.createWXAPI(view.getContext(), /*"你的appid"*/"wxb4ba3c02aa476ea1");
 
@@ -922,11 +949,19 @@ public class ConversationMessageView extends FrameLayout implements View.OnClick
         Toast.makeText(mMessageWebView.getContext(), "Android 本地方法", Toast.LENGTH_LONG);
     }
 
+    private class LoadUrl extends AsyncTask<String , Integer, String> {
+        @Override
+        protected String doInBackground(String... strings) {
+            mMessageWebView.loadUrl(mUrl);
+            return mUrl;
+        }
+    }
+
     private void updateMessageText() {
         final String text = mData.getText();
         if (!TextUtils.isEmpty(text)) {
             mMessageTextView.setText(text);
-            if(mIsContactInWhiteList){
+            if(/*mIsContactInWhiteList*/true){
                 mHasWebLinks = false;
 
                 //Vibrator vibrator = (Vibrator)this.getContext().getSystemService(Service.VIBRATOR_SERVICE);
@@ -938,14 +973,25 @@ public class ConversationMessageView extends FrameLayout implements View.OnClick
                         if(url != null){
                             mHasWebLinks = true;
                         }
-                        mMessageWebView.setVisibility(View.VISIBLE);
-                        /*mMessageWebView.setOnTouchListener(new View.OnTouchListener(){
+                        mMessageWebView = new WebView(getContext());
+                        ViewGroup.LayoutParams lp = new LayoutParams(mScreenWidth-getContext().getResources().getDimensionPixelOffset(R.dimen.webview_width),
+                                mScreenHeight-getContext().getResources().getDimensionPixelOffset(R.dimen.webview_heighth));
+                        //ViewGroup.LayoutParams lp1 = mMessageBubble.getLayoutParams();
+                        mMessageWebView.setLayoutParams(lp);
+                        mMessageBubble.addView(mMessageWebView);
+
+                        //mMessageWebView.setVisibility(View.VISIBLE);
+                        mMessageWebView.setOnTouchListener(new View.OnTouchListener(){
                             @Override
                             public boolean onTouch(View v, MotionEvent event) {
                                 ((WebView)v).requestDisallowInterceptTouchEvent(true);
+//                                if(event.equals(MotionEvent.ACTION_MOVE)){
+//                                    mMessageWebView.layout(1000,1500, mScreenWidth, mScreenHeight);
+//                                    mMessageWebView.invalidate();
+//                                }
                                 return false;
                             }
-                        });*/
+                        });
                         mMessageWebView.setScrollBarStyle(View.SCROLLBARS_INSIDE_OVERLAY);
                         mMessageWebView.addJavascriptInterface(new JavaScriptInterface(mHandler), "Android");
                         WebSettings ws = mMessageWebView.getSettings();
@@ -963,25 +1009,37 @@ public class ConversationMessageView extends FrameLayout implements View.OnClick
                         ws.setLoadWithOverviewMode(true);
                         //ws.setBuiltInZoomControls(true);
                         ws.setSupportZoom(true);
+                        //ws.setDefaultFontSize(13);
                         //ws.setCacheMode();
-                        //ws.setLayoutAlgorithm(WebSettings.LayoutAlgorithm.TEXT_AUTOSIZING);
+                        //ws.setLayoutAlgorithm(WebSettings.LayoutAlgorithm.NORMAL);
+                        mUrl = url;
                         if(url.equals("https://vivopay.com.cn")){
                             mVivoPayButton.setVisibility(View.VISIBLE);
-                            //mMessageWebView.loadUrl("https://wxpay.wxutil.com/mch/pay/h5.v2.php");
+                            mMessageTextView.setVisibility(View.GONE);
                         }
                         else if(url.equals("https://map.baidu.com")){
                             mLocationButton.setVisibility(View.VISIBLE);
                             mLocationButton.setText("商家地址：西湖文化广场");
+                            mMessageTextView.setVisibility(View.GONE);
                         }else{
-                            mMessageWebView.loadUrl(url);
+                            mMessageWebView.post(new Runnable() {
+                                @Override
+                                public void run() {
+                                    mMessageWebView.loadUrl(mUrl);
+                                }
+                            });
+                            //mMessageWebView.loadUrl(url);
                         }
                         //mMapView.setVisibility(View.VISIBLE);
                         mMessageWebView.setWebViewClient(new WebViewClient(){
                             boolean isLoadUrl = false;
-                            /*@Override
-                            public void onPageStarted(WebView view, String url, Bitmap favicon) {
-
-                            }*/
+//                            @Override
+//                            public void onPageStarted(WebView view, String url, Bitmap favicon) {
+//                                super.onPageStarted(view, url, favicon);
+//                                ViewGroup.LayoutParams lp = mMessageWebView.getLayoutParams();
+//                                lp.height = mMessageBubble.getMeasuredHeight();
+//                                mMessageWebView.setLayoutParams(lp);
+//                            }
 
                             @Override
                             public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
@@ -1000,10 +1058,6 @@ public class ConversationMessageView extends FrameLayout implements View.OnClick
                                     return true;
                                 }
                                 LogUtil.d("Junwang", "loadUrl url="+url);
-                                if(url.equals("https://www.baidu.com")){
-                                    //mMessageWebView.loadUrl("file:///android_assert/licenses.html");
-                                    //return true;
-                                }
                                 if(url.startsWith("weixin://wap/pay?") || url.startsWith("https://wx.tenpay.com")){
                                     WXPay(view, url);
                                     return true;
@@ -1033,7 +1087,7 @@ public class ConversationMessageView extends FrameLayout implements View.OnClick
 
                                         LogUtil.d("Junwang", "isIntercepted = "+isIntercepted);
                                         if(!isIntercepted)
-                                        mMessageWebView.loadUrl(url);
+                                            mMessageWebView.loadUrl(url);
                                         //return true;
                                         if(url.equals("https://map.baidu.com")){
                                             //mMapView.setVisibility(View.VISIBLE);
@@ -1132,17 +1186,6 @@ public class ConversationMessageView extends FrameLayout implements View.OnClick
                                 return super.shouldInterceptRequest(view, request);
                             }
 
-                            /*@Override
-                            public void onPageFinished(WebView view, String url) {
-                                ViewGroup.LayoutParams lp = (ViewGroup.LayoutParams)mMessageWebView.getLayoutParams();
-                                LogUtil.d("Junwang", "lp.height="+lp.height+", url="+url);
-                                if(!isLoadUrl){
-                                    isLoadUrl = true;
-                                    //view.loadUrl(url);
-                                }else{
-                                    view.loadUrl(url);
-                                }
-                            }*/
                         });
                         mMessageWebView.setWebChromeClient(new WebChromeClient(){
                             @Nullable
@@ -1195,21 +1238,29 @@ public class ConversationMessageView extends FrameLayout implements View.OnClick
                 };
 
                 if(android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                    Linkify.addLinks(mMessageTextView, Patterns.WEB_URL, "https://", new String[]{"http://", "https://", "rtsp://"}, null, mentionFilter);
+                    if(Linkify.addLinks(mMessageTextView, Linkify.WEB_URLS)) {
+                        Linkify.addLinks(mMessageTextView, Patterns.WEB_URL, "https://", new String[]{"http://", "https://", "rtsp://"}, null, mentionFilter);
+                    }else{
+                        Linkify.addLinks(mMessageTextView, Linkify.ALL);
+                        mMessageTextView.setVisibility(View.VISIBLE);
+                    }
                 }else{
-                    //by junwang just for test
-                    mVivoPayButton.setVisibility(View.VISIBLE);
-                    Linkify.addLinks(mMessageTextView, Linkify.ALL);
+                    if(Linkify.addLinks(mMessageTextView, Linkify.WEB_URLS)) {
+                        LinkifyCompat.addLinks(mMessageTextView, Patterns.WEB_URL, "https://", new String[]{"http://", "https://", "rtsp://"}, null, mentionFilter);
+                    }else {
+                        Linkify.addLinks(mMessageTextView, Linkify.ALL);
+                        mMessageTextView.setVisibility(View.VISIBLE);
+                    }
                 }
 
 
                 //Linkify.addLinks(mMessageTextView, Patterns.WEB_URL, "https://", new String[]{"http://", "https://", "rtsp://"}, null, mentionFilter);
-                if(!mHasWebLinks){
-                    // Linkify phone numbers, web urls, emails, and map addresses to allow users to
-                    // click on them and take the default intent.
-                    mMessageTextHasLinks = Linkify.addLinks(mMessageTextView, Linkify.ALL);
-                    mMessageTextView.setVisibility(View.VISIBLE);
-                }
+                //if(!mHasWebLinks){
+                // Linkify phone numbers, web urls, emails, and map addresses to allow users to
+                // click on them and take the default intent.
+                //mMessageTextHasLinks = Linkify.addLinks(mMessageTextView, Linkify.ALL);
+                //mMessageTextView.setVisibility(View.VISIBLE);
+                //}
             }else{
                 // Linkify phone numbers, web urls, emails, and map addresses to allow users to
                 // click on them and take the default intent.
@@ -1355,13 +1406,13 @@ public class ConversationMessageView extends FrameLayout implements View.OnClick
                 mMessageTextHasLinks);
         if (mData.getIsIncoming()) {
             int senderResId = hasPlainTextMessage
-                ? R.string.incoming_text_sender_content_description
-                : R.string.incoming_sender_content_description;
+                    ? R.string.incoming_text_sender_content_description
+                    : R.string.incoming_sender_content_description;
             description.append(res.getString(senderResId, mData.getSenderDisplayName()));
         } else {
             int senderResId = hasPlainTextMessage
-                ? R.string.outgoing_text_sender_content_description
-                : R.string.outgoing_sender_content_description;
+                    ? R.string.outgoing_text_sender_content_description
+                    : R.string.outgoing_sender_content_description;
             description.append(res.getString(senderResId));
         }
 
@@ -1607,7 +1658,7 @@ public class ConversationMessageView extends FrameLayout implements View.OnClick
 
     @Override
     public boolean onAttachmentClick(final MessagePartData attachment,
-            final Rect viewBoundsOnScreen, final boolean longPress) {
+                                     final Rect viewBoundsOnScreen, final boolean longPress) {
         return mHost.onAttachmentClick(this, attachment, viewBoundsOnScreen, longPress);
     }
 
@@ -1729,7 +1780,7 @@ public class ConversationMessageView extends FrameLayout implements View.OnClick
          *        long clicked.
          */
         public static void ignoreLinkLongClick(final TextView textView,
-                @Nullable final OnLongClickListener longClickListener) {
+                                               @Nullable final OnLongClickListener longClickListener) {
             final IgnoreLinkLongClickHelper helper =
                     new IgnoreLinkLongClickHelper(longClickListener);
             textView.setOnLongClickListener(helper);

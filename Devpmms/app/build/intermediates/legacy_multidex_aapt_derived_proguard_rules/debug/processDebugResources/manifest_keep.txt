@@ -1,0 +1,2 @@
+# Referenced at /Users/wjmbp/Downloads/Devpmms/app/build/intermediates/merged_manifests/debug/processDebugManifest/merged/AndroidManifest.xml:83
+-keep class com.android.messaging.BugleApplication { <init>(...); }

@@ -28,6 +28,7 @@ import com.android.messaging.R;
 import com.android.messaging.datamodel.data.ConversationListItemData;
 import com.android.messaging.datamodel.data.MessageData;
 import com.android.messaging.datamodel.data.ParticipantData;
+import com.android.messaging.ui.appsettings.H5WLDatabaseHelper;
 import com.android.messaging.util.Assert;
 import com.android.messaging.util.Assert.DoesNotRunOnMainThread;
 import com.android.messaging.util.LogUtil;
@@ -60,6 +61,8 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     public static final String PARTS_TABLE = "parts";
     public static final String PARTICIPANTS_TABLE = "participants";
     public static final String CONVERSATION_PARTICIPANTS_TABLE = "conversation_participants";
+    //add by junwang
+    public static final String H5WHITELIST_TABLE = "h5_whitelists";
 
     // Views
     static final String DRAFT_PARTS_VIEW = "draft_parts_view";
@@ -153,6 +156,13 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         // A conversation is enterprise if one of the participant is a enterprise contact.
         public static final String IS_ENTERPRISE = "IS_ENTERPRISE";
     }
+
+    //add by junwang start
+    private static final String CREATE_H5WL_TABLE_SQL = "CREATE TABLE " + H5WHITELIST_TABLE +" ("
+            + "_id INTEGER PRIMARY KEY  AUTOINCREMENT  NOT NULL ,"
+            + H5CodeNumberColumns.H5_DISPLAY_CODENUMBER + " TEXT NOT NULL" + ")";
+    //add by junwang end
+
 
     // Conversation table SQL
     private static final String CREATE_CONVERSATIONS_TABLE_SQL =
@@ -437,7 +447,11 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         /* The exact destination stored in Contacts for this participant */
         public static final String CONTACT_DESTINATION = "contact_destination";
     }
-
+    //add by junwang
+    public static class H5CodeNumberColumns implements BaseColumns{
+        //add by junwang
+        public static final String H5_DISPLAY_CODENUMBER = "codenumber";
+    }
     // Participants table SQL
     private static final String CREATE_PARTICIPANTS_TABLE_SQL =
             "CREATE TABLE " + PARTICIPANTS_TABLE + "("
@@ -535,6 +549,8 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         CREATE_PARTS_TABLE_SQL,
         CREATE_PARTICIPANTS_TABLE_SQL,
         CREATE_CONVERSATION_PARTICIPANTS_TABLE_SQL,
+        //add by junwang
+        CREATE_H5WL_TABLE_SQL,
     };
 
     // List of all our indices
@@ -820,4 +836,27 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
         mUpgradeHelper.doOnUpgrade(db, oldVersion, newVersion);
     }
+    //add by junwang
+    public static boolean isAddrInWebViewWhiteList(String contactNumber, String PhoneNumber){
+        DatabaseWrapper dbwrapper = DataModel.get().getDatabase();
+        Cursor cursor = null;
+        if(contactNumber != null && contactNumber.length() == 13 && contactNumber.contains(" ")){
+            cursor = dbwrapper.rawQuery("SELECT * FROM "+ DatabaseHelper.H5WHITELIST_TABLE +" WHERE "
+                    + H5CodeNumberColumns.H5_DISPLAY_CODENUMBER+"=?", new String[]{contactNumber.replaceAll(" ", "")});
+        }else if(PhoneNumber != null && PhoneNumber.length() == 14 && PhoneNumber.startsWith("+86")){
+            cursor = dbwrapper.rawQuery("SELECT * FROM "+ DatabaseHelper.H5WHITELIST_TABLE +" WHERE "
+                    + H5CodeNumberColumns.H5_DISPLAY_CODENUMBER+"=?", new String[]{PhoneNumber.replaceAll(" ", "").substring(3)});
+        } else {
+            cursor = dbwrapper.rawQuery("SELECT * FROM "+ DatabaseHelper.H5WHITELIST_TABLE +" WHERE "
+                    + H5CodeNumberColumns.H5_DISPLAY_CODENUMBER+"=?", new String[]{contactNumber});
+        }
+
+        if(cursor != null && cursor.getCount() > 0){
+            cursor.close();
+            return true;
+        }
+        cursor.close();
+        return false;
+    }
+
 }

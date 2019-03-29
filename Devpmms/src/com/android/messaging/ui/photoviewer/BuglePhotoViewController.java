@@ -28,7 +28,8 @@ import android.support.v4.content.Loader;
 import android.text.TextUtils;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.widget.ShareActionProvider;
+//import android.widget.ShareActionProvider;
+import android.support.v7.appcompat.ShareActionProvider;
 import android.widget.Toast;
 
 import com.android.ex.photo.PhotoViewController;
